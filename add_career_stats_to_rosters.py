@@ -15,6 +15,17 @@ from utils import player_name_corrections
 CONFIG = yaml.safe_load(open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config.yml')))
 
 SKATER_INTEGERS = ['gp', 'g', 'a', 'pts', 'plus_minus', 'pim', 'ppg', 'shg', 'gwg', 'sog']
+GOALIE_INTEGERS = ['gp', 'w', 'l', 'so', 'ga', 'sv', 'toi', 'sa']
+
+SKATER_MAPPING = {
+    'season_type': 'season_type', 'team': 'team', 'gp': 'games_played', 'g': 'goals', 'a': 'assists',
+    'pts': 'points', 'plus_minus': 'plus_minus', 'pim': 'pim', 'ppg': 'pp_goals', 'shg': 'sh_goals',
+    'gwg': 'gw_goals', 'sog': 'shots_on_goal'
+}
+GOALIE_MAPPING = {
+    'season_type': 'season_type', 'team': 'team', 'gp': 'games_played', 'w': 'w', 'l': 'l', 'so': 'so',
+    'ga': 'goals_against', 'toi': 'toi', 'sa': 'shots_against'
+}
 
 TEAMGETTER = itemgetter('team')
 
@@ -43,7 +54,88 @@ def combine_season_statlines(season_stat_lines):
 
     return combined_statline
 
-# TODO: overhaul this complete script
+def combine_seasons(seasons):
+    """
+    Aggregates skater stats through seasons, grouped by season type.
+    """
+    career_stats = dict()
+
+    if not seasons:
+        return career_stats
+
+    # aggregating regular season and playoff stats first (if applicable)
+    for season_type in ['RS', 'PO']:
+        season_stats = list(filter(lambda d: d['season_type'] == season_type, seasons))
+        if season_stats:
+            career_stats[season_type] = dict()
+            for key in SKATER_INTEGERS:
+                career_stats[season_type][key] = sum(map(itemgetter(key), season_stats))
+            else:
+                calculate_rates_percentages(career_stats[season_type])
+    # finally aggregating all player stats
+    else:
+        career_stats['all'] = dict()
+        for key in SKATER_INTEGERS:
+            career_stats['all'][key] = sum(map(itemgetter(key), seasons))
+        else:
+            calculate_rates_percentages(career_stats['all'])
+
+    return career_stats
+
+
+def combine_goalie_seasons(seasons):
+    """
+    Aggregates goalie stats through seasons, grouped by season type.
+    """
+    career_stats = dict()
+
+    if not seasons:
+        return career_stats
+    
+    # aggregating regular season and playoff stats first (if applicable)
+    for season_type in ['RS', 'PO']:
+        season_stats = list(filter(lambda d: d['season_type'] == season_type, seasons))
+        if season_stats:
+            career_stats[season_type] = dict()
+            for key in GOALIE_INTEGERS:
+                career_stats[season_type][key] = sum(map(itemgetter(key), season_stats))
+            else:
+                calculate_rates_percentages(career_stats[season_type], 'goalie')
+    # finally aggregating all player stats
+    else:
+        career_stats['all'] = dict()
+        for key in GOALIE_INTEGERS:
+            career_stats['all'][key] = sum(map(itemgetter(key), seasons))
+        else:
+            calculate_rates_percentages(career_stats['all'], 'goalie')
+
+    return career_stats
+
+
+def calculate_rates_percentages(statline, plr_type='skater'):
+    """
+    Calculates percentages and rates for skater or goalie statlines.
+    """
+    if plr_type == 'skater':
+        if statline['sog'] > 0:
+            statline['sh_pctg'] = round(statline['g'] / statline['sog'] * 100, 2)
+        else:
+            statline['sh_pctg'] = 0.
+        if statline['gp'] > 0:
+            statline['gpg'] = round(statline['g'] / statline['gp'], 2)
+            statline['apg'] = round(statline['a'] / statline['gp'], 2)
+            statline['ptspg'] = round(statline['pts'] / statline['gp'], 2)
+        else:
+            statline['gpg'] = 0.
+            statline['apg'] = 0.
+            statline['ptspg'] = 0.
+    elif plr_type == 'goalie':
+        if statline['sa']:
+            statline['sv_pctg'] = round(100 - statline['ga'] / statline['sa'] * 100., 3)
+            statline['gaa'] = round(statline['ga'] * 3600 / statline['toi'], 2)
+        else:
+            statline['sv_pctg'] = None
+            statline['gaa'] = None
 
 
 if __name__ == '__main__':
@@ -52,8 +144,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Add career stats to team roster stats.')
     parser.add_argument(
         '-s', '--season', dest='season', required=False, type=int,
-        metavar='season to download data for', default=2020,
-        choices=[2016, 2017, 2018, 2019, 2020],
+        default=CONFIG['default_season'], choices=CONFIG['seasons'],
+        metavar='season to download data for', 
         help="The season for which data will be processed")
     parser.add_argument(
         '-g', '--game_type', dest='game_type', required=False, default='RS',
@@ -69,7 +161,6 @@ if __name__ == '__main__':
     game_type = list(game_types.keys()).pop(0)
 
     teams = CONFIG['teams']
-
     roster_stats_src_dir = os.path.join(CONFIG['base_data_dir'], 'roster_stats', str(season), str(game_type))
     goalie_stats_src_dir = os.path.join(CONFIG['tgt_processing_dir'], str(season))
     goalie_stats_src_path = os.path.join(goalie_stats_src_dir, 'del_goalie_game_stats_aggregated.json')
@@ -86,6 +177,194 @@ if __name__ == '__main__':
     if not os.path.isdir(tgt_dir):
         os.makedirs(tgt_dir)
 
+    career_stats_per_player_src_dir = os.path.join(CONFIG['base_data_dir'], 'career_stats', 'per_player')
+    tmp_tgt_dir = R"c:\dev\tmp"
+
+    pre_2017_stats = dict()
+
+    # fetching pre-2017 data first
+    for f in os.listdir(career_stats_per_player_src_dir)[:]:
+        if not f.endswith('.json'):
+            continue
+        plr_id = f.split('.')[0]
+        if not plr_id.isdigit():
+            continue
+        plr_id = int(plr_id)
+        # loading current player's career stats
+        curr_plr_career_stats = json.loads(open(os.path.join(career_stats_per_player_src_dir, f)).read())
+        # retaining only stats from before the 2017/18 season
+        pre_2017_statlines = list(filter(lambda d: d['season'] < 2017, curr_plr_career_stats['seasons']))
+        curr_plr_career_stats['seasons'] = pre_2017_statlines
+        # re-creating career stats
+        if curr_plr_career_stats['position'] == 'GK':
+            curr_plr_career_stats['career'] = combine_goalie_seasons(pre_2017_statlines)
+        else:
+            curr_plr_career_stats['career'] = combine_seasons(pre_2017_statlines)
+
+        pre_2017_stats[plr_id] = curr_plr_career_stats
+
+    roster_stats_src_base_dir = os.path.join(CONFIG['base_data_dir'], 'roster_stats', str(CONFIG['default_season']))
+    # retrieving player ids of interest, i.e. those from current season
+    curr_season_plr_ids = set()
+    for game_type in ['1', '3']:
+        roster_stats_src_dir = os.path.join(roster_stats_src_base_dir, game_type)
+        for f in os.listdir(roster_stats_src_dir)[:]:
+            if not f.endswith('.json'):
+                continue
+            team_id = f.split('.')[0]
+            if not team_id.isdigit():
+                continue
+            src_path = os.path.join(roster_stats_src_dir, f)
+            curr_roster = json.loads(open(src_path).read())
+            for plr in curr_roster:
+                curr_season_plr_ids.add(plr['id'])
+
+    up_to_date_career_stats = dict()
+
+    # adding per-player per-season/playoff stats to pre-2017 stats
+    for season in CONFIG['seasons'][1:]:
+        src_dir = os.path.join(CONFIG['tgt_processing_dir'], str(season))
+        skater_stats_src_path = os.path.join(src_dir, 'del_player_game_stats_aggregated.json')
+        skater_stats = json.loads(open(skater_stats_src_path).read())[-1]
+        for item in skater_stats:
+            plr_id = item['player_id']
+            if plr_id not in curr_season_plr_ids:
+                continue
+            if plr_id not in pre_2017_stats:
+                print("No career stats for current season player: %s [%d]" % (item['full_name'], plr_id))
+                continue
+            if item['position'] == 'GK':
+                continue
+            if item['season_type'] not in ['RS', 'PO']:
+                continue
+            curr_plr_career_stats = pre_2017_stats[plr_id]
+            season_statline = dict()
+            season_statline['season'] = season
+            for attr in SKATER_MAPPING:
+                season_statline[attr] = item[SKATER_MAPPING[attr]]
+            calculate_rates_percentages(season_statline)
+            curr_plr_career_stats['seasons'].append(season_statline)
+            curr_plr_career_stats['career'] = combine_seasons(curr_plr_career_stats['seasons'])
+
+            tgt_path = os.path.join(tmp_tgt_dir, "%d.json" % plr_id)
+            open(tgt_path, 'w').write(json.dumps(curr_plr_career_stats, indent=2))
+
+            up_to_date_career_stats[plr_id] = curr_plr_career_stats
+
+        goalie_stats_src_path = os.path.join(src_dir, 'del_goalie_game_stats_aggregated.json')
+        goalie_stats = json.loads(open(goalie_stats_src_path).read())
+        for item in goalie_stats:
+            plr_id = item['player_id']
+            if plr_id not in curr_season_plr_ids:
+                continue
+            # if plr_id not in pre_2017_stats:
+            #     print("No career stats for current season player: %s [%d]" % (item['full_name'], plr_id))
+            #     continue
+            if item['position'] != 'GK':
+                continue
+            if item['season_type'] not in ['RS', 'PO']:
+                continue
+            curr_plr_career_stats = pre_2017_stats[plr_id]
+            season_statline = dict()
+            season_statline['season'] = season
+            for attr in GOALIE_MAPPING:
+                season_statline[attr] = item[GOALIE_MAPPING[attr]]
+            season_statline['sv'] = season_statline['sa'] - season_statline['ga']
+            calculate_rates_percentages(season_statline, plr_type='goalie')
+            curr_plr_career_stats['seasons'].append(season_statline)
+            curr_plr_career_stats['career'] = combine_goalie_seasons(curr_plr_career_stats['seasons'])
+
+            tgt_path = os.path.join(tmp_tgt_dir, "%d.json" % plr_id)
+            open(tgt_path, 'w').write(json.dumps(curr_plr_career_stats, indent=2))
+
+            up_to_date_career_stats[plr_id] = curr_plr_career_stats
+
+    # pre-season hack to include stats on roster pages for players with pre-2017 stats
+    for plr_id in [1768, 1761, 1823, 1818, 126, 241, 124, 451, 469, 1776]:
+        up_to_date_career_stats[plr_id] = pre_2017_stats[plr_id]
+
+    # updating per-team roster stats
+    for game_type in [1]:
+        roster_stats_src_dir = os.path.join(roster_stats_src_base_dir, str(game_type))
+        for f in os.listdir(roster_stats_src_dir)[:]:
+            if not f.endswith('.json'):
+                continue
+            team_id = f.split('.')[0]
+            if not team_id.isdigit():
+                continue
+            team_id = int(team_id)
+            src_path = os.path.join(roster_stats_src_dir, f)
+            # loading current roster
+            curr_roster = json.loads(open(src_path).read())
+            # preparing set of processed player ids to avoid retaining wrongly existing
+            # duplicate entries in team roster data (as happened with MSC semi-finalists in 2020)
+            plr_ids_processed = set()
+            # also since duplicate entries in original data exist we have to re-create roster
+            # lists to avoid those duplicate entries
+            updated_roster = list()
+
+            for plr in curr_roster:
+                plr_id = plr['id']
+                # checking if player has already been processed
+                if plr_id in plr_ids_processed:
+                    continue
+                # optionally correcting player name
+                if plr_id in player_name_corrections:
+                    corrected_player_name = player_name_corrections[plr_id]
+                    if 'first_name' in corrected_player_name:
+                        plr['firstname'] = corrected_player_name['first_name']
+                    if 'last_name' in corrected_player_name:
+                        plr['surname'] = corrected_player_name['last_name']
+                    if 'full_name' in corrected_player_name:
+                        plr['name'] = corrected_player_name['full_name']
+
+                curr_plr_career_stats = up_to_date_career_stats.get(plr_id)
+
+                # retaining career stats
+                if curr_plr_career_stats and 'all' in curr_plr_career_stats['career']:
+                    plr['career'] = curr_plr_career_stats['career']['all']
+                # retaining career playoff stats
+                if curr_plr_career_stats and 'PO' in curr_plr_career_stats['career']:
+                    plr['career_po'] = curr_plr_career_stats['career']['PO']
+
+                # retrieving current player's previous DEL teams
+                if curr_plr_career_stats:
+                    prev_teams = set(map(TEAMGETTER, curr_plr_career_stats['seasons']))
+                    prev_teams.discard(CONFIG['teams'][team_id])
+                    plr['prev_teams'] = sorted(list(prev_teams))
+                else:
+                    plr['prev_teams'] = list()
+
+                # retrieving current player's stats from last regular season
+                try:
+                    prev_season_player_stats = list(filter(lambda d:
+                        d['season'] == season - 1 and d['season_type'] == 'RS', curr_plr_career_stats['seasons']))
+                except TypeError:
+                    print("No stats dataset for previous season found for %s" % plr['name'])
+                    prev_season_player_stats = list()
+                if prev_season_player_stats:
+                    if len(prev_season_player_stats) > 1:
+                        print("Multiple datasets from previous regular season found for player %s" % plr['name'])
+                        if plr['position'] != 'GK':
+                            plr['prev_season'] = dict(combine_season_statlines(prev_season_player_stats))
+                        else:
+                            pass
+                            # TODO: take care of goalies with multiple season stat lines
+                    else:
+                        # retaining previous season's stats (if available)
+                        plr['prev_season'] = prev_season_player_stats.pop(0)
+
+                updated_roster.append(plr)
+                plr_ids_processed.add(plr_id)
+
+            tgt_path = os.path.join(tgt_dir, "%s_stats.json" % CONFIG['teams'][team_id])
+            open(tgt_path, 'w').write(json.dumps(updated_roster, indent=2))
+
+
+    import sys
+    sys.exit()
+
+
     # working on each team's current official roster
     for fname in os.listdir(roster_stats_src_dir):
         team = teams[int(os.path.splitext(fname)[0])]
@@ -100,40 +379,6 @@ if __name__ == '__main__':
         updated_roster = list()
 
         for plr in roster:
-            plr_id = plr['id']
-            # checking if player has already been processed
-            if plr_id in plr_ids_processed:
-                continue
-            if plr_id in player_name_corrections:
-                corrected_player_name = player_name_corrections[plr_id]
-                if 'first_name' in corrected_player_name:
-                    plr['firstname'] = corrected_player_name['first_name']
-                if 'last_name' in corrected_player_name:
-                    plr['surname'] = corrected_player_name['last_name']
-                if 'full_name' in corrected_player_name:
-                    plr['name'] = corrected_player_name['full_name']
-            # calculating goalie statistics
-            if plr['position'] == 'GK':
-                for goalie_stat in goalie_stats:
-                    # skipping pre-season tournaments
-                    if goalie_stat['season_type'] == 'MSC':
-                        continue
-                    if goalie_stat['player_id'] == plr_id:
-                        plr['statistics']['w'] = goalie_stat['w']
-                        plr['statistics']['l'] = goalie_stat['l']
-                        plr['statistics']['so'] = goalie_stat['so']
-                        plr['statistics']['toi'] = goalie_stat['toi']
-                        plr['statistics']['shots_against'] = goalie_stat['shots_against']
-                        plr['statistics']['goals_against'] = goalie_stat['goals_against']
-                        if plr['statistics']['shots_against']:
-                            plr['statistics']['save_pctg'] = round(
-                                100 - plr['statistics']['goals_against'] / plr['statistics']['shots_against'] * 100., 3)
-                            plr['statistics']['gaa'] = round(
-                                plr['statistics']['goals_against'] * 3600 / plr['statistics']['toi'], 2)
-                        else:
-                            plr['statistics']['save_pctg'] = None
-                            plr['statistics']['gaa'] = None
-                        break
             # retrieving current player's career stats
             curr_player_career_stats = list(filter(lambda d: plr_id == d['player_id'], career_stats))
             if len(curr_player_career_stats) == 1:
@@ -166,9 +411,13 @@ if __name__ == '__main__':
                     # retaining previous season's stats (if available)
                     plr['prev_season'] = prev_season_player_stats.pop(0)
             # retrieving current player's previous DEL teams
-            prev_teams = set(map(TEAMGETTER, curr_player_career_stats['seasons']))
-            prev_teams.discard(team)
-            plr['prev_teams'] = list(prev_teams)
+            if curr_player_career_stats:
+                prev_teams = set(map(TEAMGETTER, curr_player_career_stats['seasons']))
+                # prev_teams.discard(team)
+                # hack to include current team to list of previous teams
+                # has to be deactivated once new season data is available
+                prev_teams.add(team)
+                plr['prev_teams'] = list(prev_teams)
 
             # retaining career stats
             if curr_player_career_stats and 'all' in curr_player_career_stats['career']:
