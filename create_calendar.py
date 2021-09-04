@@ -15,7 +15,7 @@ from ics import Calendar, Event
 # loading external configuration
 CONFIG = yaml.safe_load(open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config.yml')))
 
-SEASON = 2020
+SEASON = CONFIG['default_season']
 
 TGT_DIR = CONFIG['tgt_processing_dir']
 TGT_FILE = "del_calendar.ics"
