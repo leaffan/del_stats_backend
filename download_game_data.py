@@ -13,6 +13,8 @@ from datetime import datetime
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+# loading external configuration
+CONFIG = yaml.safe_load(open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config.yml')))
 
 def get_download_targets(args, config):
     '''
@@ -30,10 +32,7 @@ def get_download_targets(args, config):
     if not tgt_game_type or tgt_game_type == 'ALL':
         game_types = list(config['game_types'].keys())
     else:
-        game_types = {
-            k: v for (k, v) in config['game_types'].items() if
-            v == tgt_game_type
-        }
+        game_types = {k: v for (k, v) in config['game_types'].items() if v == tgt_game_type}
 
     return seasons, game_types
 
@@ -143,12 +142,12 @@ if __name__ == '__main__':
         description='Download DEL game information.')
     parser.add_argument(
         '-s', '--season', dest='season', required=False, type=int,
-        metavar='season to download data for', default=2020,
-        choices=[2016, 2017, 2018, 2019, 2020],
+        metavar='season to download data for',
+        default=CONFIG['default_season'], choices=CONFIG['seasons'],
         help="The season for which information will be downloaded for")
     parser.add_argument(
         '-g', '--game_type', dest='game_type', required=False,
-        metavar='game type to download data for', choices=['RS', 'PO', 'MSC', 'ALL'],
+        metavar='game type to download data for', choices=list(CONFIG['game_types'].values()) + ['ALL'],
         help="The game type for which information will be downloaded for")
     parser.add_argument(
         'category', metavar='information category',
@@ -158,18 +157,15 @@ if __name__ == '__main__':
             'game_goalies', 'shifts', 'game_player_stats', 'shots', 'faceoffs'
         ])
 
-    # loading external configuration
-    config = yaml.safe_load(open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config.yml')))
-
     args = parser.parse_args()
-    seasons, game_types = get_download_targets(args, config)
+    seasons, game_types = get_download_targets(args, CONFIG)
     print("+ Downloading %s data" % args.category)
 
-    base_url = config['base_url']
-    del_base_url = config['del_base_url']
-    tgt_base_dir = config['tgt_base_dir']
+    base_url = CONFIG['base_url']
+    del_base_url = CONFIG['del_base_url']
+    tgt_base_dir = CONFIG['tgt_base_dir']
     tgt_sub_dir = args.category
-    target_url_component = config['url_components'][args.category]
+    tgt_url_component = CONFIG['url_components'][args.category]
 
     if args.category == 'shots':
         print("+ Using DEL base url %s" % del_base_url)
@@ -191,9 +187,8 @@ if __name__ == '__main__':
             # setting up target directory and path
             tgt_dir = os.path.join(tgt_base_dir, tgt_sub_dir, str(season), str(game_type))
 
-            print(
-                "+ Downloading %s data for %s games in %d-%d" % (
-                    args.category, config['game_types'][game_type], season, season + 1))
+            print("+ Downloading %s data for %s games in %d-%d" % (
+                args.category, CONFIG['game_types'][game_type], season, season + 1))
 
             download_tasks = list()
 
@@ -208,52 +203,48 @@ if __name__ == '__main__':
                     for team_id in games_and_teams[game_id]:
                         # setting up target url
                         if args.category == 'game_player_stats':
-                            target_url = R"/".join((
-                                base_url, 'matches', str(game_id),
-                                target_url_component, "%s.json" % team_id))
+                            tgt_url = R"/".join((
+                                base_url, 'matches', str(game_id), tgt_url_component, "%s.json" % team_id))
                             alt_url = ''
                         elif args.category == 'game_team_stats':
-                            target_url = R"/".join((
-                                base_url, 'match-detail', target_url_component,
-                                str(game_id), "%s.json" % team_id))
+                            tgt_url = R"/".join((
+                                base_url, 'match-detail', tgt_url_component, str(game_id), "%s.json" % team_id))
                             alt_url = R"/".join((
                                 del_base_url, 'live-ticker', 'matches',
                                 str(game_id), "team-stats-%s.json" % current_team))
                         current_team = 'guest'
 
                         tgt_path = os.path.join(tgt_dir, "%d_%d.json" % (game_id, team_id))
-                        download_tasks.append((target_url, alt_url, tgt_path))
+                        download_tasks.append((tgt_url, alt_url, tgt_path))
                 # regular game stats are stored in a single file for each game
                 else:
                     if args.category in ['shifts']:
                         # shift data files after a certain cutoff date need special treatment
                         game_date = datetime.strptime(game_dates[game_id], '%Y-%m-%d %H:%M:%S').date()
-                        suffix_valid_from_date = datetime.strptime(config['url_suffix_valid_from'], '%Y-%m-%d').date()
+                        suffix_valid_from_date = datetime.strptime(CONFIG['url_suffix_valid_from'], '%Y-%m-%d').date()
                         if game_date >= suffix_valid_from_date:
-                            target_url = R"/".join((
+                            tgt_url = R"/".join((
                                 base_url, 'matches', str(game_id),
-                                "%s%s.json" % (target_url_component, config['url_suffix'])))
+                                "%s%s.json" % (tgt_url_component, CONFIG['url_suffix'])))
                         else:
-                            target_url = R"/".join((
-                                base_url, 'matches', str(game_id), "%s.json" % target_url_component))
+                            tgt_url = R"/".join((
+                                base_url, 'matches', str(game_id), "%s.json" % tgt_url_component))
                         alt_url = ''
                     elif args.category in ['shots']:
                         # setting up target url
-                        target_url = R"/".join((base_url, 'visualization', 'shots', "%d.json" % game_id))
-                        alt_url = R"/".join((del_base_url, target_url_component, "%d.json" % game_id))
+                        tgt_url = R"/".join((base_url, 'visualization', 'shots', "%d.json" % game_id))
+                        alt_url = R"/".join((del_base_url, tgt_url_component, "%d.json" % game_id))
                     else:
                         # setting up target url
-                        target_url = R"/".join((
-                            base_url, 'matches', str(game_id),
-                            "%s.json" % target_url_component))
+                        tgt_url = R"/".join((base_url, 'matches', str(game_id), "%s.json" % tgt_url_component))
                         if args.category in ['game_goalies', 'faceoffs']:
                             alt_url = ''
                         else:
                             alt_url = R"/".join((
-                                del_base_url, 'live-ticker', 'matches', str(game_id), "%s.json" % target_url_component))
+                                del_base_url, 'live-ticker', 'matches', str(game_id), "%s.json" % tgt_url_component))
 
                     tgt_path = os.path.join(tgt_dir, "%d.json" % game_id)
-                    download_tasks.append((target_url, alt_url, tgt_path))
+                    download_tasks.append((tgt_url, alt_url, tgt_path))
 
             # creating target directory (if necessary)
             if download_tasks:
