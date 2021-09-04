@@ -232,8 +232,8 @@ if __name__ == '__main__':
         help="The last date statistics will be aggregated")
     parser.add_argument(
         '-s', '--season', dest='season', required=False, type=int,
-        metavar='season to download data for', default=2020,
-        choices=[2016, 2017, 2018, 2019, 2020],
+        default=CONFIG['default_season'], choices=CONFIG['seasons'],
+        metavar='season to download data for',
         help="The season for which data  will be aggregated")
 
     args = parser.parse_args()
@@ -515,10 +515,12 @@ if __name__ == '__main__':
     open(tgt_goalies_path, 'w').write(json.dumps(aggregated_goalie_stats, indent=2, default=convert_to_minutes))
     open(tgt_personal_data_path, 'w').write(json.dumps(output_personal_data, indent=2))
 
-    keys = aggregated_stats_as_list[0].keys()
+    if aggregated_stats_as_list:
+        keys = aggregated_stats_as_list[0].keys()
 
-    with open(tgt_csv_path, 'w', encoding='utf-8') as output_file:
-        output_file.write('\ufeff')
-        dict_writer = csv.DictWriter(output_file, OUT_FIELDS, delimiter=';', lineterminator='\n', extrasaction='ignore')
-        dict_writer.writeheader()
-        dict_writer.writerows(aggregated_stats_as_list)
+        with open(tgt_csv_path, 'w', encoding='utf-8') as output_file:
+            output_file.write('\ufeff')
+            dict_writer = csv.DictWriter(
+                output_file, OUT_FIELDS, delimiter=';', lineterminator='\n', extrasaction='ignore')
+            dict_writer.writeheader()
+            dict_writer.writerows(aggregated_stats_as_list)

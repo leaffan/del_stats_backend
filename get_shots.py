@@ -16,8 +16,7 @@ from utils import get_game_info, get_game_type_from_season_type
 from reconstruct_skater_situation import reconstruct_skater_situation
 
 # loading external configuration
-CONFIG = yaml.safe_load(open(os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), 'config.yml')))
+CONFIG = yaml.safe_load(open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config.yml')))
 
 GAME_SRC = 'del_games.json'
 SHOTS_DATA_TGT = 'del_shots.json'
@@ -143,10 +142,9 @@ if __name__ == '__main__':
         '--limit', dest='limit', required=False, type=int, default=0,
         help='Number of maximum games to be processed')
     parser.add_argument(
-        '-s', '--season', dest='season', required=False, default=2020,
-        type=int, metavar='season to process games for',
-        choices=[2016, 2017, 2018, 2019, 2020],
-        help="The season information will be processed for")
+        '-s', '--season', dest='season', required=False, type=int,
+        default=CONFIG['default_season'], choices=CONFIG['seasons'],
+        metavar='season to process games for', help="The season information will be processed for")
 
     args = parser.parse_args()
 

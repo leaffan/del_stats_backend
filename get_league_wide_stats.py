@@ -24,8 +24,8 @@ if __name__ == '__main__':
         '--initial', dest='initial', required=False,
         action='store_true', help='Re-create list of league-wide statistics')
     parser.add_argument(
-        '-s', '--season', dest='season', required=False, default=2020,
-        type=int, choices=[2016, 2017, 2018, 2019, 2020],
+        '-s', '--season', dest='season', required=False, type=int,
+        default=CONFIG['default_season'], choices=CONFIG['seasons'],
         metavar='season to process data for',
         help="The season information will be processed for")
 
@@ -64,6 +64,8 @@ if __name__ == '__main__':
         save_pctg = 0.
     if shots_on_goal_5v5:
         save_pctg_5v5 = round((1 - goals_5v5 / shots_on_goal_5v5), 10)
+    else:
+        save_pctg_5v5 = 0.
 
     print("\t+ Save percentage: %g" % save_pctg)
     print("\t+ 5v5 Save percentage: %g" % save_pctg_5v5)

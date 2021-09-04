@@ -25,7 +25,7 @@ GOALIE_CATEGORIES = [
 
 ALL_PLAYERS_SRC = 'del_players.json'
 
-CURRENT_SEASON = 2020
+CURRENT_SEASON = CONFIG['default_season']
 
 PLR_IDS_TO_SKIP = [1567]
 

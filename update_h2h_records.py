@@ -14,7 +14,7 @@ CONFIG = yaml.safe_load(open(os.path.join(
 PRE_SEASON_HEAD2HEAD_SRC = 'pre_season_h2h.json'
 SEASON_HEAD2HEAD_TGT = 'h2h.json'
 TEAM_GAME_SRC = 'del_team_game_stats.json'
-SEASON = 2019
+SEASON = CONFIG['default_season']
 
 if __name__ == '__main__':
 

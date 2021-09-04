@@ -14,7 +14,7 @@ season's aggregated stats.
 
 CONFIG = yaml.safe_load(open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config.yml')))
 
-SEASON = 2020
+SEASON = CONFIG['default_season']
 
 SKATER_MAPPING = {
     'games_played': 'gp', 'goals': 'g', 'assists': 'a', 'points': 'pts', 'plus_minus': 'plus_minus',

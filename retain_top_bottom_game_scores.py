@@ -28,6 +28,10 @@ def retrieve_top_bottom_game_scores(player_game_stats, personal_data):
 
     # calculating mean and standard deviation
     print("+ %d individual game scores collected" % len(game_scores))
+    
+    if not game_scores:
+        return list(), list()
+    
     gs_mean = statistics.mean(game_scores)
     gs_stdev = statistics.stdev(game_scores)
     print("+ Average game score value: %g" % gs_mean)
@@ -103,8 +107,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Strip game scores to retain only top and bottom values.')
     parser.add_argument(
-        '-s', '--season', dest='season', required=False, default=2020,
-        type=int, choices=[2016, 2017, 2018, 2019, 2020],
+        '-s', '--season', dest='season', required=False, type=int,
+        default=CONFIG['default_season'], choices=CONFIG['seasons'],
         metavar='season to process games for',
         help="The season information will be processed for")
 
