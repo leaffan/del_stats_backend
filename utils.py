@@ -135,7 +135,24 @@ player_name_corrections = {
         'first_name': 'Tim',
         'last_name': 'Stapleton',
         'full_name': 'Tim Stapleton'
-    }
+    },
+    1774: {
+        'first_name': 'Jonathon',
+        'full_name': 'Jonathon Blum'
+    },
+    115: {
+        'first_name': 'Maxi',
+        'full_name': 'Maxi Kammerer'
+    },
+    622: {
+        'first_name': 'Alex',
+        'full_name': 'Alex Roach'
+    },
+    1812: {
+        'first_name': 'Guillaume',
+        'last_name': 'Naud',
+        'full_name': 'Guillaume Naud'
+    },
 }
 
 # defining game score corrections
@@ -179,7 +196,7 @@ iso_country_codes = {
     'ITA': 'it', 'NOR': 'no', 'FRA': 'fr', 'LVA': 'lv', 'SVK': 'sk',
     'DNK': 'dk', 'RUS': 'ru', 'SVN': 'si', 'HUN': 'hu', 'SLO': 'si',
     'AUT': 'at', 'CRO': 'hr', 'CZE': 'cz', 'DEN': 'dk', 'LAT': 'lv',
-    'BEL': 'be',
+    'BEL': 'be', 'KAZ': 'kz',
 }
 
 
