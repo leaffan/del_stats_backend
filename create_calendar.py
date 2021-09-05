@@ -33,6 +33,8 @@ if __name__ == '__main__':
 
     c = Calendar()
 
+    schedules_by_team = dict()
+
     for fixture in schedules[:]:
         e = Event()
         if fixture['start_date'] == "0000-00-00 00:00:00":
@@ -47,10 +49,25 @@ if __name__ == '__main__':
         e.end = str(end)
         print("+ Creating event: %s - %s on %s" % (fixture['home']['name'], fixture['guest']['name'], begin.date()))
         e.name = "%s - %s" % (fixture['home']['name'], fixture['guest']['name'])
-        # adding event to calendar
+        # adding event to league calendar
         c.events.add(e)
 
-    # writing calendar to ics file
+        # adding event to respective team calendars
+        for key in ['home', 'guest']:
+            if not fixture[key]['shortcut'] in schedules_by_team:
+                schedules_by_team[fixture[key]['shortcut']] = Calendar()
+            schedules_by_team[fixture[key]['shortcut']].events.add(e)
+
+    # writing league calendar to ics file
     tgt_path = os.path.join(TGT_DIR, str(SEASON), TGT_FILE)
     with open(tgt_path, 'w', encoding='utf-8') as tgt_ics:
         tgt_ics.writelines(c)
+
+    # writing team calendars to ics files
+    for team_id in CONFIG['teams']:
+        team = CONFIG['teams'][team_id]
+        tc = schedules_by_team.get(team, Calendar())
+        tgt_file = 'del_calendar_%s.ics' % team
+        tgt_path = os.path.join(TGT_DIR, str(SEASON), tgt_file)
+        with open(tgt_path, 'w', encoding='utf-8') as tgt_ics:
+            tgt_ics.writelines(tc)
