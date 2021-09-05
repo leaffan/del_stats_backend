@@ -178,7 +178,6 @@ if __name__ == '__main__':
         os.makedirs(tgt_dir)
 
     career_stats_per_player_src_dir = os.path.join(CONFIG['base_data_dir'], 'career_stats', 'per_player')
-    tmp_tgt_dir = R"c:\dev\tmp"
 
     pre_2017_stats = dict()
 
@@ -246,9 +245,6 @@ if __name__ == '__main__':
             curr_plr_career_stats['seasons'].append(season_statline)
             curr_plr_career_stats['career'] = combine_seasons(curr_plr_career_stats['seasons'])
 
-            tgt_path = os.path.join(tmp_tgt_dir, "%d.json" % plr_id)
-            open(tgt_path, 'w').write(json.dumps(curr_plr_career_stats, indent=2))
-
             up_to_date_career_stats[plr_id] = curr_plr_career_stats
 
         goalie_stats_src_path = os.path.join(src_dir, 'del_goalie_game_stats_aggregated.json')
@@ -273,9 +269,6 @@ if __name__ == '__main__':
             calculate_rates_percentages(season_statline, plr_type='goalie')
             curr_plr_career_stats['seasons'].append(season_statline)
             curr_plr_career_stats['career'] = combine_goalie_seasons(curr_plr_career_stats['seasons'])
-
-            tgt_path = os.path.join(tmp_tgt_dir, "%d.json" % plr_id)
-            open(tgt_path, 'w').write(json.dumps(curr_plr_career_stats, indent=2))
 
             up_to_date_career_stats[plr_id] = curr_plr_career_stats
 
