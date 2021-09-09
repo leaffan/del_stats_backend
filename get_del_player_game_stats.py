@@ -47,6 +47,7 @@ U23_CUTOFF_DATES = {
     2018: parse("1995-12-31"),
     2019: parse("1996-12-31"),
     2020: parse("1997-12-31"),
+    2021: parse("1998-12-31"),
 }
 
 U20_CUTOFF_DATES = {
@@ -57,6 +58,7 @@ U20_CUTOFF_DATES = {
     2018: parse("1998-12-31"),
     2019: parse("1999-12-31"),
     2020: parse("2000-12-31"),
+    2021: parse("2001-12-31"),
 }
 
 ROOKIE_PLAYER_IDS = list()

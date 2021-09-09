@@ -25,6 +25,7 @@ PLAYOFF_DATES = {
     2018: datetime.date(2019, 3, 5),
     2019: datetime.date(2020, 3, 9),
     2020: datetime.date(2021, 4, 19),
+    2021: datetime.date(2022, 3, 26),
 }
 
 POS_KEYS = {'1': 'G', '2': 'D', '3': 'F'}
