@@ -21,13 +21,14 @@ coaches = [
     'Christoph Kreutzer', 'Manuel Kofler', 'Pierre Beaulieu', 'Steve Walker',
     'Niklas Sundblad', 'Glen Hanlon', 'Thomas Dolak', 'Mihails Svarinskis',
     'Boris Blank', 'Frank Fischöder', 'Clark Donatelli', 'Brad Tapper',
-    'Ville Vaija',
+    'Ville Vaija', 'Daniel Naud', 'Mark Pederson',
 ]
 
 
 name_corrections = {
     # regular corrections for names of coaches
     'Thomas Popisch': 'Thomas Popiesch',
+    'Thomas Popeisch': 'Thomas Popiesch',
     'Tom Pokle': 'Tom Pokel',
     'Paul Thompsen': 'Paul Thompson',
     'Kurt Kleindorst': 'Kurt Kleinendorst',
@@ -81,6 +82,8 @@ name_corrections = {
     'Pierre Beaulien': 'Pierre Beaulieu',
     'Kristof Kreutzer': 'Niklas Sundblad',
     'Christian Hommel': 'Brad Tapper',
+    'Daniel NAUD': 'Daniel Naud',
+    'Donatelli Clark': 'Clark Donatelli',
     # the following name corrections are only valid until the date specified after the pipe symbol
     'Pierre Beaulieu': 'Brandon Reid|2019-12-12',
     # the following corrections also includes a replacement only valid after a specified date designated by the ~ symbol
