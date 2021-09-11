@@ -260,6 +260,7 @@ if __name__ == '__main__':
                 continue
             if item['season_type'] not in ['RS', 'PO']:
                 continue
+            print(item['last_name'])
             curr_plr_career_stats = pre_2017_stats[plr_id]
             season_statline = dict()
             season_statline['season'] = season
@@ -346,6 +347,24 @@ if __name__ == '__main__':
                     else:
                         # retaining previous season's stats (if available)
                         plr['prev_season'] = prev_season_player_stats.pop(0)
+
+                for plr_tmp in career_stats:
+                    if plr_tmp['position'] != 'GK':
+                        continue
+                    if plr_tmp['player_id'] != plr_id:
+                        continue
+                    current_goalie_season = list(
+                        filter(lambda s: s['season'] == 2021 and s['season_type'] == 'RS', plr_tmp['seasons']))
+                    if current_goalie_season:
+                        current_goalie_season = current_goalie_season.pop(0)
+                    else:
+                        continue
+                    if current_goalie_season and current_goalie_season['gp']:
+                        plr['statistics']['w'] = current_goalie_season['w']
+                        plr['statistics']['l'] = current_goalie_season['l']
+                        plr['statistics']['gaa'] = current_goalie_season['gaa']
+                        plr['statistics']['save_pctg'] = current_goalie_season['sv_pctg']
+                        plr['statistics']['so'] = current_goalie_season['so']
 
                 updated_roster.append(plr)
                 plr_ids_processed.add(plr_id)
