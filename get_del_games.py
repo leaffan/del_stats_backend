@@ -152,6 +152,9 @@ def get_single_game_details(game_id, season, game_type):
     # quick fix for wrongly registered arena in 2020 MagentaSport Cup
     if season == 2020 and game_type == 4 and single_game_data['arena'] == 'Mercedes-Benz Arena':
         single_game_data['arena'] = 'Sportforum Berlin'
+    # quick fix for missing arena information of Bietigheim home games
+    if not game_details['stadium'] and game_details['teamInfo']['home']['shortcut'] == 'SCB':
+        single_game_data['arena'] = 'EgeTrans Arena'
     single_game_data['attendance'] = game_details['numberOfViewers']
 
     single_game_data['home_id'] = game_details['teamInfo']['home']['id']

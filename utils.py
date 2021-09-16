@@ -181,6 +181,7 @@ capacities = {
     'Eisstadion Straubing': 5825,
     'EisArena Wolfsburg': 4503,
     'Sportforum Berlin': 4695,
+    'EgeTrans Arena': 4517
 }
 
 divisions = {
