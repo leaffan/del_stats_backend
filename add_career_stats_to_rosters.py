@@ -167,8 +167,9 @@ if __name__ == '__main__':
     goalie_stats = json.loads(open(goalie_stats_src_path).read())
     career_stats_src_path = os.path.join(CONFIG['tgt_processing_dir'], 'career_stats', 'updated_career_stats.json')
     career_stats = json.loads(open(career_stats_src_path).read())
-    career_stats_per_player_src_dir = os.path.join(CONFIG['tgt_processing_dir'], 'career_stats', 'per_player')
-    career_stats_against_per_player_src_dir = os.path.join(CONFIG['base_data_dir'], 'career_stats_against')
+    career_stats_per_player_src_dir = os.path.join(CONFIG['tgt_base_dir'], 'career_stats_new', 'per_player')
+    career_stats_against_per_player_src_dir = os.path.join(
+        CONFIG['base_data_dir'], 'career_stats_against', 'per_player')
 
     player_game_stats_src_path = os.path.join(CONFIG['tgt_processing_dir'], str(season), 'del_player_game_stats.json')
     player_game_stats = json.loads(open(player_game_stats_src_path).read())[-1]
@@ -176,8 +177,6 @@ if __name__ == '__main__':
     tgt_dir = os.path.join(CONFIG['tgt_processing_dir'], 'career_stats', 'per_team')
     if not os.path.isdir(tgt_dir):
         os.makedirs(tgt_dir)
-
-    career_stats_per_player_src_dir = os.path.join(CONFIG['base_data_dir'], 'career_stats', 'per_player')
 
     pre_2017_stats = dict()
 
@@ -192,7 +191,7 @@ if __name__ == '__main__':
         # loading current player's career stats
         curr_plr_career_stats = json.loads(open(os.path.join(career_stats_per_player_src_dir, f)).read())
         # retaining only stats from before the 2017/18 season
-        pre_2017_statlines = list(filter(lambda d: d['season'] < 2017, curr_plr_career_stats['seasons']))
+        pre_2017_statlines = list(filter(lambda d: d['season'] < 2017, curr_plr_career_stats.get('seasons', list())))
         curr_plr_career_stats['seasons'] = pre_2017_statlines
         # re-creating career stats
         if curr_plr_career_stats['position'] == 'GK':
@@ -260,7 +259,6 @@ if __name__ == '__main__':
                 continue
             if item['season_type'] not in ['RS', 'PO']:
                 continue
-            print(item['last_name'])
             curr_plr_career_stats = pre_2017_stats[plr_id]
             season_statline = dict()
             season_statline['season'] = season
@@ -274,8 +272,12 @@ if __name__ == '__main__':
             up_to_date_career_stats[plr_id] = curr_plr_career_stats
 
     # pre-season hack to include stats on roster pages for players with pre-2017 stats
-    for plr_id in [1768, 1761, 1823, 1818, 126, 241, 124, 451, 469, 1776]:
-        up_to_date_career_stats[plr_id] = pre_2017_stats[plr_id]
+    for plr_id in [1768, 1761, 1823, 1818, 126, 241, 124, 451, 469]:
+        if plr_id in pre_2017_stats:
+            # print("%d found in pre-2017 stats" % plr_id)
+            up_to_date_career_stats[plr_id] = pre_2017_stats[plr_id]
+        else:
+            print("%d not found in pre-2017 stats" % plr_id)
 
     # updating per-team roster stats
     for game_type in [1]:
@@ -329,16 +331,16 @@ if __name__ == '__main__':
                 else:
                     plr['prev_teams'] = list()
 
-                # retrieving current player's stats from last regular season
-                try:
+                if not curr_plr_career_stats:
+                    print("+ No career stats found for player %s" % plr['name'])
+                if curr_plr_career_stats:
                     prev_season_player_stats = list(filter(lambda d:
                         d['season'] == season - 1 and d['season_type'] == 'RS', curr_plr_career_stats['seasons']))
-                except TypeError:
-                    print("No stats dataset for previous season found for %s" % plr['name'])
+                else:
                     prev_season_player_stats = list()
                 if prev_season_player_stats:
                     if len(prev_season_player_stats) > 1:
-                        print("Multiple datasets from previous regular season found for player %s" % plr['name'])
+                        print("+ Multiple datasets from previous regular season found for player %s" % plr['name'])
                         if plr['position'] != 'GK':
                             plr['prev_season'] = dict(combine_season_statlines(prev_season_player_stats))
                         else:
@@ -348,6 +350,7 @@ if __name__ == '__main__':
                         # retaining previous season's stats (if available)
                         plr['prev_season'] = prev_season_player_stats.pop(0)
 
+                # dirty hack to adding goalie statistics to stats section
                 for plr_tmp in career_stats:
                     if plr_tmp['position'] != 'GK':
                         continue
@@ -366,128 +369,63 @@ if __name__ == '__main__':
                         plr['statistics']['save_pctg'] = current_goalie_season['sv_pctg']
                         plr['statistics']['so'] = current_goalie_season['so']
 
+                # retrieving stats against other teams
+                opp_team_stats = dict()
+                curr_player_game_stats = list(
+                    filter(lambda pg: pg['player_id'] == plr_id and pg['season_type'] != 'MSC', player_game_stats))
+                opp_teams = set(list(map(itemgetter('opp_team'), curr_player_game_stats)))
+                for opp_team in opp_teams:
+                    curr_player_opp_game_stats = list(
+                        filter(lambda pg: pg['opp_team'] == opp_team and pg['time_on_ice'] > 0, curr_player_game_stats))
+                    if curr_player_opp_game_stats:
+                        single_opp_team_stats = dict()
+                        single_opp_team_stats['gp'] = len(curr_player_opp_game_stats)
+                        single_opp_team_stats['g'] = sum(map(itemgetter('goals'), curr_player_opp_game_stats))
+                        single_opp_team_stats['a'] = sum(map(itemgetter('assists'), curr_player_opp_game_stats))
+                        single_opp_team_stats['pts'] = sum(map(itemgetter('points'), curr_player_opp_game_stats))
+                        single_opp_team_stats['gwg'] = sum(map(itemgetter('gw_goals'), curr_player_opp_game_stats))
+                        single_opp_team_stats['pim'] = sum(map(itemgetter('pim_from_events'), curr_player_opp_game_stats))
+                        opp_team_stats[opp_team] = single_opp_team_stats
+                plr['opp_team_stats'] = opp_team_stats
+
+                # calculating overall career stats against other teams
+                career_against_stats_src_path = os.path.join(career_stats_against_per_player_src_dir, '%d.json' % plr_id)
+                if os.path.isfile(career_against_stats_src_path):
+                    career_against_stats = json.loads(open(career_against_stats_src_path).read())
+                else:
+                    career_against_stats = dict()
+
+                if 'plr_games' in career_against_stats and 'season_games' in career_against_stats:
+                    if career_against_stats['plr_games'] != career_against_stats['season_games']:
+                        plr['game_discrepancy'] = True
+
+                opp_team_stats_career = dict()
+
+                if career_against_stats:
+                    career_against_stats = career_against_stats['career_against']
+
+                for opp_team in CONFIG['teams'].values():
+                    single_career_opp_team_stats = defaultdict(int)
+                    if opp_team in career_against_stats:
+                        single_career_opp_team_stats['gp'] = career_against_stats[opp_team]['gp']
+                        single_career_opp_team_stats['g'] = career_against_stats[opp_team]['g']
+                        single_career_opp_team_stats['a'] = career_against_stats[opp_team]['a']
+                        single_career_opp_team_stats['pts'] = career_against_stats[opp_team]['pts']
+                        single_career_opp_team_stats['gwg'] = None
+                        single_career_opp_team_stats['pim'] = career_against_stats[opp_team]['pim']
+                    if opp_team in plr['opp_team_stats']:
+                        single_career_opp_team_stats['gp'] += plr['opp_team_stats'][opp_team]['gp']
+                        single_career_opp_team_stats['g'] += plr['opp_team_stats'][opp_team]['g']
+                        single_career_opp_team_stats['a'] += plr['opp_team_stats'][opp_team]['a']
+                        single_career_opp_team_stats['pts'] += plr['opp_team_stats'][opp_team]['pts']
+                        single_career_opp_team_stats['pim'] += plr['opp_team_stats'][opp_team]['pim']
+                    if single_career_opp_team_stats:
+                        opp_team_stats_career[opp_team] = single_career_opp_team_stats
+
+                plr['opp_team_stats_career'] = opp_team_stats_career
+
                 updated_roster.append(plr)
                 plr_ids_processed.add(plr_id)
 
             tgt_path = os.path.join(tgt_dir, "%s_stats.json" % CONFIG['teams'][team_id])
             open(tgt_path, 'w').write(json.dumps(updated_roster, indent=2))
-
-
-    import sys
-    sys.exit()
-
-
-    # working on each team's current official roster
-    for fname in os.listdir(roster_stats_src_dir):
-        team = teams[int(os.path.splitext(fname)[0])]
-        roster_src = os.path.join(roster_stats_src_dir, fname)
-        roster = json.loads(open(roster_src).read())
-
-        # preparing set of processed player ids to avoid retaining wrongly existing
-        # duplicate entries in team roster data (as happened with MSC semi-finalists in 2020)
-        plr_ids_processed = set()
-        # also since duplicate entries in original data exist we have to re-create roster
-        # lists to avoid those duplicate entries
-        updated_roster = list()
-
-        for plr in roster:
-            # retrieving current player's career stats
-            curr_player_career_stats = list(filter(lambda d: plr_id == d['player_id'], career_stats))
-            if len(curr_player_career_stats) == 1:
-                curr_player_career_stats = curr_player_career_stats.pop(0)
-            elif len(curr_player_career_stats) > 1:
-                print("Multiple career stats datasets found for %s" % plr['name'])
-                continue
-            elif len(curr_player_career_stats) == 0:
-                print("No career stats datasets found for %s" % plr['name'])
-                per_player_src_path = os.path.join(career_stats_per_player_src_dir, "%d.json" % plr_id)
-                if os.path.isfile(per_player_src_path):
-                    curr_player_career_stats = json.loads(open(per_player_src_path).read())
-            # retrieving current player's stats from last regular season
-            try:
-                prev_season_player_stats = list(filter(
-                    lambda d: d['season'] == season - 1 and
-                    d['season_type'] == 'RS', curr_player_career_stats['seasons']))
-            except TypeError:
-                print("No stats dataset for previous season found for %s" % plr['name'])
-                prev_season_player_stats = list()
-            if prev_season_player_stats:
-                if len(prev_season_player_stats) > 1:
-                    print("Multiple datasets from previous regular season found for player %s" % plr['name'])
-                    if plr['position'] != 'GK':
-                        plr['prev_season'] = dict(combine_season_statlines(prev_season_player_stats))
-                    else:
-                        pass
-                        # TODO: take care of goalies with multiple season stat lines
-                else:
-                    # retaining previous season's stats (if available)
-                    plr['prev_season'] = prev_season_player_stats.pop(0)
-            # retrieving current player's previous DEL teams
-            if curr_player_career_stats:
-                prev_teams = set(map(TEAMGETTER, curr_player_career_stats['seasons']))
-                # prev_teams.discard(team)
-                # hack to include current team to list of previous teams
-                # has to be deactivated once new season data is available
-                prev_teams.add(team)
-                plr['prev_teams'] = list(prev_teams)
-
-            # retaining career stats
-            if curr_player_career_stats and 'all' in curr_player_career_stats['career']:
-                plr['career'] = curr_player_career_stats['career']['all']
-            # retaining career playoff stats
-            if curr_player_career_stats and 'PO' in curr_player_career_stats['career']:
-                plr['career_po'] = curr_player_career_stats['career']['PO']
-
-            # retrieving stats against other teams
-            opp_team_stats = dict()
-            curr_player_game_stats = list(
-                filter(lambda pg: pg['player_id'] == plr_id and pg['season_type'] != 'MSC', player_game_stats))
-            opp_teams = set(list(map(itemgetter('opp_team'), curr_player_game_stats)))
-            for opp_team in opp_teams:
-                curr_player_opp_game_stats = list(
-                    filter(lambda pg: pg['opp_team'] == opp_team and pg['time_on_ice'] > 0, curr_player_game_stats))
-                if curr_player_opp_game_stats:
-                    single_opp_team_stats = dict()
-                    single_opp_team_stats['gp'] = len(curr_player_opp_game_stats)
-                    single_opp_team_stats['g'] = sum(map(itemgetter('goals'), curr_player_opp_game_stats))
-                    single_opp_team_stats['a'] = sum(map(itemgetter('assists'), curr_player_opp_game_stats))
-                    single_opp_team_stats['pts'] = sum(map(itemgetter('points'), curr_player_opp_game_stats))
-                    single_opp_team_stats['gwg'] = sum(map(itemgetter('gw_goals'), curr_player_opp_game_stats))
-                    single_opp_team_stats['pim'] = sum(map(itemgetter('pim_from_events'), curr_player_opp_game_stats))
-                    opp_team_stats[opp_team] = single_opp_team_stats
-            plr['opp_team_stats'] = opp_team_stats
-
-            # calculating overall career stats against other teams
-            career_against_stats_src_path = os.path.join(career_stats_against_per_player_src_dir, '%d.json' % plr_id)
-            if os.path.isfile(career_against_stats_src_path):
-                career_against_stats = json.loads(open(career_against_stats_src_path).read())['career_against']
-            else:
-                career_against_stats = dict()
-
-            opp_team_stats_career = dict()
-
-            for opp_team in CONFIG['teams'].values():
-                single_career_opp_team_stats = defaultdict(int)
-                if opp_team in career_against_stats:
-                    single_career_opp_team_stats['gp'] = career_against_stats[opp_team]['games_played']
-                    single_career_opp_team_stats['g'] = career_against_stats[opp_team]['goals']
-                    single_career_opp_team_stats['a'] = career_against_stats[opp_team]['assists']
-                    single_career_opp_team_stats['pts'] = career_against_stats[opp_team]['points']
-                    single_career_opp_team_stats['gwg'] = None
-                    single_career_opp_team_stats['pim'] = career_against_stats[opp_team]['pim']
-                if opp_team in plr['opp_team_stats']:
-                    single_career_opp_team_stats['gp'] += plr['opp_team_stats'][opp_team]['gp']
-                    single_career_opp_team_stats['g'] += plr['opp_team_stats'][opp_team]['g']
-                    single_career_opp_team_stats['a'] += plr['opp_team_stats'][opp_team]['a']
-                    single_career_opp_team_stats['pts'] += plr['opp_team_stats'][opp_team]['pts']
-                    single_career_opp_team_stats['pim'] += plr['opp_team_stats'][opp_team]['pim']
-                if single_career_opp_team_stats:
-                    opp_team_stats_career[opp_team] = single_career_opp_team_stats
-
-            plr['opp_team_stats_career'] = opp_team_stats_career
-
-            updated_roster.append(plr)
-            plr_ids_processed.add(plr_id)
-
-        tgt_path = os.path.join(tgt_dir, "%s_stats.json" % team)
-        open(tgt_path, 'w').write(json.dumps(updated_roster, indent=2))
