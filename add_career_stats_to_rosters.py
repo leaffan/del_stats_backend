@@ -167,7 +167,7 @@ if __name__ == '__main__':
     goalie_stats = json.loads(open(goalie_stats_src_path).read())
     career_stats_src_path = os.path.join(CONFIG['tgt_processing_dir'], 'career_stats', 'updated_career_stats.json')
     career_stats = json.loads(open(career_stats_src_path).read())
-    career_stats_per_player_src_dir = os.path.join(CONFIG['tgt_base_dir'], 'career_stats_new', 'per_player')
+    career_stats_per_player_src_dir = os.path.join(CONFIG['tgt_base_dir'], 'career_stats', 'per_player')
     career_stats_against_per_player_src_dir = os.path.join(
         CONFIG['base_data_dir'], 'career_stats_against', 'per_player')
 
