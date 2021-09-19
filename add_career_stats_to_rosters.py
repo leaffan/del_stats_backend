@@ -398,6 +398,11 @@ if __name__ == '__main__':
                 if 'plr_games' in career_against_stats and 'season_games' in career_against_stats:
                     if career_against_stats['plr_games'] != career_against_stats['season_games']:
                         plr['game_discrepancy'] = True
+                        print("\t=> %s (%d): Different number of season games (%d) and player games (%d): %d" %(
+                            plr['name'], plr_id,
+                            career_against_stats['season_games'], career_against_stats['plr_games'],
+                            abs(career_against_stats['season_games'] - career_against_stats['plr_games'])
+                        ))
 
                 opp_team_stats_career = dict()
 
