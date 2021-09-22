@@ -108,6 +108,7 @@ name_corrections = {
     '772_BHV': 'Thomas Popiesch',
     '772_EBB': 'Uwe Krupp',
     '849_SWW': 'Pat Cortina',
+    '2145_KEV': 'Boris Blank',
     # Arenas
     'Curt Frenzel Stadium': 'Curt-Frenzel-Stadion',
     'Arena NBG Versicheru': 'Arena Nürnberger Versicherung',
