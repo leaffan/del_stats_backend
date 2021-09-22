@@ -126,6 +126,10 @@ def get_single_game_team_data(game, grouped_shot_data, pp_sit_data):
             game_stat_line['coach'] = correct_name(
                 "%d_%s" % (game_id, game_stat_line['team']))
             print("\t+ Adjusted to '%s'" % game_stat_line['coach'])
+        # this is necessary to apply fix name corrections for coaches
+        if "%d_%s" % (game_id, game_stat_line['team']) in name_corrections:
+            game_stat_line['coach'] = correct_name(
+                "%d_%s" % (game_id, game_stat_line['team']))
         if "%s_coach" % opp_key in game:
             game_stat_line['opp_coach'] = correct_name(
                 game["%s_coach" % opp_key], game['date'])
@@ -138,6 +142,10 @@ def get_single_game_team_data(game, grouped_shot_data, pp_sit_data):
             game_stat_line['opp_coach'] = correct_name(
                 "%d_%s" % (game_id, game_stat_line['opp_team']))
             print("\t+ Adjusted to '%s'" % game_stat_line['opp_coach'])
+        # this is necessary to apply fix name corrections for coaches
+        if "%d_%s" % (game_id, game_stat_line['opp_team']) in name_corrections:
+            game_stat_line['opp_coach'] = correct_name(
+                "%d_%s" % (game_id, game_stat_line['opp_team']))
         game_stat_line['ref_1'] = correct_name(game['referee_1'])
         game_stat_line['ref_2'] = correct_name(game['referee_2'])
         game_stat_line['lma_1'] = correct_name(game['linesman_1'])
