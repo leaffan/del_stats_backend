@@ -92,11 +92,15 @@ if __name__ == '__main__':
                     ep_id, ep_dob = get_ep_info_for_player(single_plr)
                     if ep_id:
                         single_plr['ep_id'] = ep_id
+                        ep_ids[str(plr['id'])] = ep_id
                     if ep_dob and not 'dob' in single_plr:
                         single_plr['dob'] = ep_dob
                         single_plr['age'] = calculate_age(str(single_plr['dob']))
+                        ep_dobs[str(plr['id'])] = ep_dob
                 all_players[single_plr['player_id']] = single_plr
 
     all_players = dict(sorted(all_players.items()))
 
     open(tgt_path, 'w').write(json.dumps(all_players, indent=2, default=str))
+    open(ep_ids_src_path, 'w').write(json.dumps(ep_ids, indent=2, default=str))
+    open(ep_dobs_src_path, 'w').write(json.dumps(ep_dobs, indent=2, default=str))
