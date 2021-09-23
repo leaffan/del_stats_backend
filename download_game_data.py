@@ -183,6 +183,9 @@ if __name__ == '__main__':
 
     for season in seasons:
         for game_type in game_types:
+            # skipping MSC games if we're not in 2020 season
+            if game_type == 4 and season != 2020:
+                continue
 
             # setting up target directory and path
             tgt_dir = os.path.join(tgt_base_dir, tgt_sub_dir, str(season), str(game_type))

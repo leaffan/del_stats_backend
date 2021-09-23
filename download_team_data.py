@@ -83,6 +83,9 @@ if __name__ == '__main__':
             sys.stdout.write("%s:" % teams[team_id])
             sys.stdout.flush()
             for game_type in game_types:
+                # skipping MSC games if we're not in 2020 season
+                if game_type == 4 and season != 2020:
+                    continue
                 # setting up target url
                 tgt_url = R"/".join((base_url, tgt_url_component, str(season), str(game_type), "%d.json" % team_id))
 
