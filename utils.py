@@ -21,7 +21,7 @@ coaches = [
     'Christoph Kreutzer', 'Manuel Kofler', 'Pierre Beaulieu', 'Steve Walker',
     'Niklas Sundblad', 'Glen Hanlon', 'Thomas Dolak', 'Mihails Svarinskis',
     'Boris Blank', 'Frank Fischöder', 'Clark Donatelli', 'Brad Tapper',
-    'Ville Vaija', 'Daniel Naud', 'Mark Pederson',
+    'Ville Vaija', 'Daniel Naud', 'Mark Pederson', 'Igor Zakharkin',
 ]
 
 
@@ -88,6 +88,7 @@ name_corrections = {
     'Pierre Beaulieu': 'Brandon Reid|2019-12-12',
     # the following corrections also includes a replacement only valid after a specified date designated by the ~ symbol
     'Boris Blank': ['Mihails Svarinskis|2021-01-21', 'Clark Donatelli~2021-02-02'],
+    'Clark Donatelli': ['Igor Zakharkin~2021-09-23'],
     # following are individual corrections valid only for the accompanying game date
     'Don Jackson': 'Steve Walker//2020-02-02',
     # following are individual corrections valid only for the specified
