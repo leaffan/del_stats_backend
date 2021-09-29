@@ -166,24 +166,46 @@ game_score_corrections = {
 }
 
 capacities = {
-    'Arena Nürnberger Versicherung': 7672,
-    'Curt-Frenzel-Stadion': 6139,
-    'Mercedes-Benz Arena': 14200,
-    'SAP-Arena': 13600,
-    'Eisarena Bremerhaven': 4647,
-    'ISS Dome': 13205,
-    'Saturn Arena': 4816,
-    'Eissporthalle Iserlohn': 4967,
-    'Lanxess Arena': 18700,
-    'RheinEnergieSTADION': 50000,
-    'König Palast': 8029,
-    'Yayla-Arena': 8029,
-    'Olympia Eishalle': 6142,
-    'Helios Arena': 6214,
-    'Eisstadion Straubing': 5825,
-    'EisArena Wolfsburg': 4503,
-    'Sportforum Berlin': 4695,
-    'EgeTrans Arena': 4517
+    2021: {
+        'Arena Nürnberger Versicherung': 7672,
+        'Curt-Frenzel-Stadion': 6179,
+        'Mercedes-Benz Arena': 14200,
+        'SAP-Arena': 13600,
+        'Eisarena Bremerhaven': 4647,
+        'ISS Dome': 13205,
+        'Saturn Arena': 4815,
+        'Eissporthalle Iserlohn': 4967,
+        'Lanxess Arena': 18650,
+        'RheinEnergieSTADION': 50000,
+        'König Palast': 8029,
+        'Yayla-Arena': 8029,
+        'Olympia Eishalle': 6142,
+        'Helios Arena': 5300,
+        'Eisstadion Straubing': 5730,
+        'EisArena Wolfsburg': 4503,
+        'Sportforum Berlin': 4695,
+        'EgeTrans Arena': 4517
+    },
+    'default': {
+        'Arena Nürnberger Versicherung': 7672,
+        'Curt-Frenzel-Stadion': 6139,
+        'Mercedes-Benz Arena': 14200,
+        'SAP-Arena': 13600,
+        'Eisarena Bremerhaven': 4647,
+        'ISS Dome': 13205,
+        'Saturn Arena': 4816,
+        'Eissporthalle Iserlohn': 4967,
+        'Lanxess Arena': 18700,
+        'RheinEnergieSTADION': 50000,
+        'König Palast': 8029,
+        'Yayla-Arena': 8029,
+        'Olympia Eishalle': 6142,
+        'Helios Arena': 6214,
+        'Eisstadion Straubing': 5825,
+        'EisArena Wolfsburg': 4503,
+        'Sportforum Berlin': 4695,
+        'EgeTrans Arena': 4517
+    }
 }
 
 divisions = {

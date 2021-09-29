@@ -107,12 +107,12 @@ def get_single_game_team_data(game, grouped_shot_data, pp_sit_data):
         # game_stat_line['schedule_game_id'] = game['schedule_game_id']
         game_stat_line['arena'] = correct_name(game['arena'])
         game_stat_line['attendance'] = game['attendance']
-        if game_stat_line['arena'] in capacities:
-            game_stat_line['capacity'] = capacities[game_stat_line['arena']]
+        # trying to retrieve season-specific capacities, otherwise use default ones
+        arena_capacities = capacities.get(game['season'], 'default')
+        if game_stat_line['arena'] in arena_capacities:
+            game_stat_line['capacity'] = arena_capacities[game_stat_line['arena']]
         else:
-            print(
-                "\t+ Unable to retrieve capacity " +
-                "for '%s'" % game_stat_line['arena'])
+            print("\t+ Unable to retrieve capacity for '%s'" % game_stat_line['arena'])
             game_stat_line['capacity'] = 0
         # coaches and referees
         if "%s_coach" % key in game:
