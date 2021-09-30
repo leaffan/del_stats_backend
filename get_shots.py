@@ -130,6 +130,57 @@ def retrieve_goals(events_src_path):
     return goals
 
 
+def count_pp_opps_goals_times(game_id, times):
+    """
+    Aggregates power play opportunities, goals, and times grouped by
+    skater counts on ice.
+    """
+    pp_situations = defaultdict(int)
+    pp_goals = defaultdict(int)
+    pp_times = defaultdict(int)
+    prev_situation = (5, 5)
+
+    # counting powerplay opportunities and goals
+    for time in times:
+        curr_situation = (times[time]['home'], times[time]['road'])
+        if curr_situation != prev_situation:
+            pp_situations[curr_situation] += 1
+            prev_situation = curr_situation
+        if time in goal_times and goal_times[time].startswith("PP"):
+            pp_goals[curr_situation] += 1
+
+    pp_opps_goals_times = dict()
+    pp_opps_goals_times['game_id'] = game_id
+    pp_opps_goals_times['home'] = defaultdict(dict)
+    pp_opps_goals_times['road'] = defaultdict(dict)
+
+    for situation in [(5, 4), (5, 3), (4, 3), (4, 5), (3, 5), (3, 4)]:
+        sit_key = "%dv%d" % situation
+        pp_opps_goals_times['home']['pp_sits'][sit_key] = 0
+        pp_opps_goals_times['home']['pp_goals'][sit_key] = 0
+        pp_opps_goals_times['home']['pp_times'][sit_key] = 0
+        pp_opps_goals_times['road']['pp_sits'][sit_key] = 0
+        pp_opps_goals_times['road']['pp_goals'][sit_key] = 0
+        pp_opps_goals_times['road']['pp_times'][sit_key] = 0
+
+    for situation in pp_situations:
+        sit_key = "%dv%d" % situation
+        pp_opps_goals_times['home']['pp_sits'][sit_key] = pp_situations[situation]
+        pp_opps_goals_times['road']['pp_sits'][sit_key[::-1]] = pp_situations[situation]
+    for situation in pp_goals:
+        sit_key = "%dv%d" % situation
+        pp_opps_goals_times['home']['pp_goals'][sit_key] = pp_goals[situation]
+        pp_opps_goals_times['road']['pp_goals'][sit_key[::-1]] = pp_goals[situation]
+
+    for home_skr_cnt, road_skr_cnt in pp_situations:
+        sit_key = "%dv%d" % (home_skr_cnt, road_skr_cnt)
+        sit_times = list(filter(lambda s: s['home'] == home_skr_cnt and s['road'] == road_skr_cnt, times.values()))
+        pp_opps_goals_times['home']['pp_times'][sit_key] = len(sit_times)
+        pp_opps_goals_times['road']['pp_times'][sit_key[::-1]] = len(sit_times)
+
+    return pp_opps_goals_times
+
+
 if __name__ == '__main__':
 
     # retrieving arguments specified on command line
@@ -372,48 +423,7 @@ if __name__ == '__main__':
         if limit and cnt >= limit:
             break
 
-        # retrieving power play opportunities and goals grouped by
-        # skater situation
-        # not perfect yet, need to do this whilst reconstructing skater
-        # situation
-        pp_situations = defaultdict(int)
-        pp_goals = defaultdict(int)
-        prev_situation = (5, 5)
-
-        for time in times:
-            curr_situation = (
-                times[time]['home'], times[time]['road'])
-            if curr_situation != prev_situation:
-                pp_situations[curr_situation] += 1
-                prev_situation = curr_situation
-            if time in goal_times and goal_times[time].startswith("PP"):
-                pp_goals[curr_situation] += 1
-                # print("Goal at", time, "in", curr_situation)
-
-        pp_situations_goals = dict()
-        pp_situations_goals['game_id'] = game['game_id']
-        pp_situations_goals['home'] = defaultdict(dict)
-        pp_situations_goals['road'] = defaultdict(dict)
-
-        for situation in [(5, 4), (5, 3), (4, 3), (4, 5), (3, 5), (3, 4)]:
-            sit_key = "%dv%d" % situation
-            pp_situations_goals['home']['pp_sits'][sit_key] = 0
-            pp_situations_goals['home']['pp_goals'][sit_key] = 0
-            pp_situations_goals['road']['pp_sits'][sit_key] = 0
-            pp_situations_goals['road']['pp_goals'][sit_key] = 0
-
-        for situation in pp_situations:
-            sit_key = "%dv%d" % situation
-            pp_situations_goals['home']['pp_sits'][sit_key] = (
-                pp_situations[situation])
-            pp_situations_goals['road']['pp_sits'][sit_key[::-1]] = (
-                pp_situations[situation])
-        for situation in pp_goals:
-            sit_key = "%dv%d" % situation
-            pp_situations_goals['home']['pp_goals'][sit_key] = (
-                pp_goals[situation])
-            pp_situations_goals['road']['pp_goals'][sit_key[::-1]] = (
-                pp_goals[situation])
+        pp_situations_goals = count_pp_opps_goals_times(game['game_id'], times)
 
         all_pp_situations_goals[game['game_id']] = pp_situations_goals
 
