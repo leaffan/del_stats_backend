@@ -13,8 +13,7 @@ import intervaltree
 from utils import get_game_info, get_game_type_from_season_type, get_home_road
 
 # loading external configuration
-CONFIG = yaml.safe_load(open(os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), 'config.yml')))
+CONFIG = yaml.safe_load(open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config.yml')))
 
 GAME_SRC = 'del_games.json'
 
@@ -634,8 +633,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Process DEL team game statistics.')
     parser.add_argument(
-        '-s', '--season', dest='season', required=False, default=2020,
-        type=int, choices=[2016, 2017, 2018, 2019, 2020],
+        '-s', '--season', dest='season', required=False, default=CONFIG['default_season'],
+        type=int, choices=CONFIG['seasons'],
         metavar='season to process games for',
         help="The season information will be processed for")
     parser.add_argument(
@@ -661,44 +660,3 @@ if __name__ == '__main__':
         print(get_game_info(game))
 
         skr_sit, goal_times = reconstruct_skater_situation(game, True)
-
-    # for x in skr_sit:
-    #     print(x, skr_sit[x])
-    # print()
-    # sits = defaultdict(int)
-    # goals = defaultdict(int)
-    # prev_sit = (5, 5)
-
-    # for x in skr_sit:
-    #     curr_sit = (skr_sit[x]['home'], skr_sit[x]['road'])
-    #     if curr_sit != prev_sit:
-    #         sits[curr_sit] += 1
-    #         print(x, skr_sit[x])
-    #         prev_sit = curr_sit
-    #     if x in goal_times and goal_times[x].startswith("PP"):
-    #         goals[curr_sit] += 1
-    #         print("Goal at", x, "in", curr_sit)
-
-    # final_home_sits = dict()
-    # final_road_sits = dict()
-    # final_home_goals = dict()
-    # final_road_goals = dict()
-
-    # for sit in [(5, 4), (5, 3), (4, 3), (4, 5), (3, 5), (3, 4)]:
-    #     if sit in sits:
-    #         final_home_sits[sit] = sits[sit]
-    #         final_road_sits[sit[::-1]] = sits[sit]
-    #     else:
-    #         final_home_sits[sit] = 0
-    #         final_road_sits[sit[::-1]] = 0
-    #     if sit in goals:
-    #         final_home_goals[sit] = goals[sit]
-    #         final_road_goals[sit[::-1]] = goals[sit]
-    #     else:
-    #         final_home_goals[sit] = 0
-    #         final_road_goals[sit[::-1]] = 0
-
-    # print(final_home_sits)
-    # print(final_home_goals)
-    # print(final_road_sits)
-    # print(final_road_goals)
