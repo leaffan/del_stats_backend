@@ -11,15 +11,8 @@ from copy import deepcopy
 from lxml import html
 from dateutil.parser import ParserError, parse
 
-src_path = R"C:\del\roster_stats\2021\1\in.txt"
-empty_stats_src_path = R"C:\del\roster_stats\empty_stats_section.json"
-roster_stats_src_dir = R"C:\del\roster_stats\2021\1"
-
 # loading external configuration
-CONFIG = yaml.safe_load(open(os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), 'config.yml')))
-
-plr_id = 9000
+CONFIG = yaml.safe_load(open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config.yml')))
 
 URL_TPL = "https://www.eliteprospects.com/search/player?q=%s"
 PLR_TPL = "https://www.eliteprospects.com/player/"
@@ -50,7 +43,7 @@ def get_ep_info_for_player(plr):
 
     trs = get_trs_from_ep_plr_search(url)
 
-    # alternatively searching by last name 
+    # alternatively searching by last name and date of birth
     if not trs and dob:
         url = URL_TPL % plr['last_name']
         url = "&".join((url, DOB_URL_TPL % dob))
