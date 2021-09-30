@@ -108,7 +108,7 @@ def get_single_game_team_data(game, grouped_shot_data, pp_sit_data):
         game_stat_line['arena'] = correct_name(game['arena'])
         game_stat_line['attendance'] = game['attendance']
         # trying to retrieve season-specific capacities, otherwise use default ones
-        arena_capacities = capacities.get(game['season'], 'default')
+        arena_capacities = capacities.get(game['season'], capacities['default'])
         if game_stat_line['arena'] in arena_capacities:
             game_stat_line['capacity'] = arena_capacities[game_stat_line['arena']]
         else:
@@ -428,20 +428,18 @@ def get_single_game_team_data(game, grouped_shot_data, pp_sit_data):
         game_stat_line['ppg_5v4'] = pp_sit_data[key]['pp_goals']['5v4']
         game_stat_line['ppg_5v3'] = pp_sit_data[key]['pp_goals']['5v3']
         game_stat_line['ppg_4v3'] = pp_sit_data[key]['pp_goals']['4v3']
+        game_stat_line['ppt_5v4'] = pp_sit_data[key]['pp_times']['5v4']
+        game_stat_line['ppt_5v3'] = pp_sit_data[key]['pp_times']['5v3']
+        game_stat_line['ppt_4v3'] = pp_sit_data[key]['pp_times']['4v3']
         game_stat_line['opp_pp_5v4'] = pp_sit_data[opp_key]['pp_sits']['5v4']
         game_stat_line['opp_pp_5v3'] = pp_sit_data[opp_key]['pp_sits']['5v3']
         game_stat_line['opp_pp_4v3'] = pp_sit_data[opp_key]['pp_sits']['4v3']
         game_stat_line['opp_ppg_5v4'] = pp_sit_data[opp_key]['pp_goals']['5v4']
         game_stat_line['opp_ppg_5v3'] = pp_sit_data[opp_key]['pp_goals']['5v3']
         game_stat_line['opp_ppg_4v3'] = pp_sit_data[opp_key]['pp_goals']['4v3']
-
-        # opp_diff = game_stat_line['pp_opps'] - (
-        #     game_stat_line['pp_5v4'] +
-        #     game_stat_line['pp_5v3'] +
-        #     game_stat_line['pp_4v3']
-        # )
-        # if opp_diff:
-        #     print("\tpp opp discrepancy of %d for %s" % (opp_diff, key))
+        game_stat_line['opp_ppt_5v4'] = pp_sit_data[opp_key]['pp_times']['5v4']
+        game_stat_line['opp_ppt_5v3'] = pp_sit_data[opp_key]['pp_times']['5v3']
+        game_stat_line['opp_ppt_4v3'] = pp_sit_data[opp_key]['pp_times']['4v3']
 
         # registering shootout stats (if applicable)
         shootout_stats = get_shootout_stats(game, key, opp_key)
