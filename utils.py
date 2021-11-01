@@ -22,7 +22,7 @@ coaches = [
     'Niklas Sundblad', 'Glen Hanlon', 'Thomas Dolak', 'Mihails Svarinskis',
     'Boris Blank', 'Frank Fischöder', 'Clark Donatelli', 'Brad Tapper',
     'Ville Vaija', 'Daniel Naud', 'Mark Pederson', 'Igor Zakharkin',
-    'Tom Rowe'
+    'Tom Rowe', 'Niklas Hede'
 ]
 
 
@@ -125,7 +125,7 @@ name_corrections = {
 }
 
 # defining player name corrections
-player_name_corrections = {
+player_data_corrections = {
     1410: {
         'first_name': 'Patrick Joseph',
         'full_name': 'Patrick Joseph Alber'
@@ -160,6 +160,9 @@ player_name_corrections = {
         'last_name': 'Naud',
         'full_name': 'Guillaume Naud'
     },
+    1858: {
+        'position': 'FO'
+    }
 }
 
 # defining game score corrections
@@ -372,14 +375,14 @@ def read_del_team_names(src=R"data\del_team_names.csv"):
     return team_lookup
 
 
-def correct_player_name(single_plr):
+def correct_player_data(single_plr):
     """
     Corrects name items in specified player data set.
     """
     plr_id = single_plr['player_id']
     # retrieving all available correction items for current player
-    corrections = player_name_corrections[plr_id]
+    corrections = player_data_corrections[plr_id]
     # correcting name items, if applicable
-    for key in ['first_name', 'last_name', 'full_name']:
+    for key in ['first_name', 'last_name', 'full_name', 'position']:
         if key in single_plr and key in corrections:
             single_plr[key] = corrections[key]

@@ -9,7 +9,7 @@ import argparse
 from operator import itemgetter
 from collections import defaultdict
 
-from utils import player_name_corrections
+from utils import player_data_corrections
 
 # loading external configuration
 CONFIG = yaml.safe_load(open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config.yml')))
@@ -305,14 +305,12 @@ if __name__ == '__main__':
                 if plr_id in plr_ids_processed:
                     continue
                 # optionally correcting player name
-                if plr_id in player_name_corrections:
-                    corrected_player_name = player_name_corrections[plr_id]
-                    if 'first_name' in corrected_player_name:
-                        plr['firstname'] = corrected_player_name['first_name']
-                    if 'last_name' in corrected_player_name:
-                        plr['surname'] = corrected_player_name['last_name']
-                    if 'full_name' in corrected_player_name:
-                        plr['name'] = corrected_player_name['full_name']
+                if plr_id in player_data_corrections:
+                    corrected_player_data = player_data_corrections[plr_id]
+                    plr['firstname'] = corrected_player_data.get('first_name', plr['firstname'])
+                    plr['surname'] = corrected_player_data.get('last_name', plr['surname'])
+                    plr['name'] = corrected_player_data.get('full_name', plr['name'])
+                    plr['position'] = corrected_player_data.get('position', plr['position'])
 
                 curr_plr_career_stats = up_to_date_career_stats.get(plr_id)
 

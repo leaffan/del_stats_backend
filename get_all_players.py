@@ -6,7 +6,7 @@ import os
 import yaml
 import json
 
-from utils import calculate_age, player_name_corrections, correct_player_name, iso_country_codes
+from utils import calculate_age, player_data_corrections, correct_player_data, iso_country_codes
 from get_players_from_ep import get_ep_info_for_player
 
 # loading external configuration
@@ -61,8 +61,8 @@ if __name__ == '__main__':
                 single_plr['player_id'] = int(plr['id'])
                 single_plr['first_name'] = plr['firstname']
                 single_plr['last_name'] = plr['surname']
-                if int(plr['id']) in player_name_corrections:
-                    correct_player_name(single_plr)
+                if int(plr['id']) in player_data_corrections:
+                    correct_player_data(single_plr)
                 single_plr['position'] = plr['position']
                 # adjusting position (if necessary)
                 if plr['position'] in POSITION_MAPPING:
